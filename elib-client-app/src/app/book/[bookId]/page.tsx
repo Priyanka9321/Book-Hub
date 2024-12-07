@@ -1,26 +1,16 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import Image from "next/image";
+import { GetServerSideProps } from "next";
 import { Book } from "@/types";
 import DownloadButton from "../components/DownloadButton";
 
-const SingleBookPage = async ({ params }: { params: { bookId: string } }) => {
-  let book: Book | null = null;
+interface Props {
+  book: Book | null;
+}
 
-  try {
-    const response = await fetch(
-      `${process.env.BACKEND_URL}/books/${params.bookId}`
-    );
-    if (!response.ok) {
-      throw new Error("Error fetching book");
-    }
-    book = await response.json();
-  } catch (err) {
-    throw new Error("Error fetching book");
-  }
-
+const SingleBookPage = ({ book }: Props) => {
   if (!book) {
-    throw new Error("Book not found")
+    return <div>Book not found</div>;
   }
 
   return (
@@ -44,6 +34,28 @@ const SingleBookPage = async ({ params }: { params: { bookId: string } }) => {
       </div>
     </div>
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const { bookId } = params as { bookId: string };
+  let book: Book | null = null;
+
+  try {
+    const response = await fetch(`${process.env.BACKEND_URL}/books/${bookId}`);
+    if (!response.ok) {
+      throw new Error("Error fetching book");
+    }
+    book = await response.json();
+  } catch (err) {
+    console.error(err);
+    book = null;
+  }
+
+  return {
+    props: {
+      book,
+    },
+  };
 };
 
 export default SingleBookPage;
